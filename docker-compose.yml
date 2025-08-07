@@ -6,14 +6,14 @@ services:
     environment:
       KAFKA_CFG_NODE_ID: "0"
       KAFKA_CFG_PROCESS_ROLES: "broker,controller"
+      KAFKA_OPTS: "-Duser.timezone=Asia/Taipei"
       KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "0@localhost:9093"
       KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
       KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-      KAFKA_CFG_LOG_DIRS: /bitnami/kafka/data
       KAFKA_CFG_KRAFT_STORAGE_ROOT_DIR: /bitnami/kafka/data
-      KAFKA_CFG_KRAFT_METADATA_LOG_DIRS: /bitnami/kafka/meta
-      KAFKA_OPTS: "-Duser.timezone=Asia/Taipei"
       ALLOW_PLAINTEXT_LISTENER: "yes"
       KAFKA_CFG_LOG_RETENTION_MINUTES: "5"
+    volumes:
+      - ./kafka_dir/data:/bitnami/kafka/data
