@@ -9,7 +9,7 @@ services:
       KAFKA_OPTS: "-Duser.timezone=Asia/Taipei"
       KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "0@localhost:9093"
       KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
       KAFKA_CFG_KRAFT_STORAGE_ROOT_DIR: /bitnami/kafka/data
@@ -17,3 +17,36 @@ services:
       KAFKA_CFG_LOG_RETENTION_MINUTES: "5"
     volumes:
       - ./kafka_dir/data:/bitnami/kafka/data
+    networks: [k_f_net]
+
+  JM:
+    image: apache/flink:1.20.2
+    command: jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+          jobmanager.rpc.address: JM
+          state.checkpoints.dir: file:///opt/flink/checkpoints
+
+    volumes:
+      - ./flink_dir/jm_checkpoints:/opt/flink/checkpoints
+    networks: [k_f_net]
+
+  TM:
+    image: apache/flink:1.20.2
+    command: taskmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+          jobmanager.rpc.address: JM
+          taskmanager.numberOfTaskSlots: 4
+          state.checkpoints.dir: file:///opt/flink/checkpoints
+
+    volumes:
+      - ./flink_dir/tm_checkpoints:/opt/flink/checkpoints
+    networks: [k_f_net]
+
+networks:
+  k_f_net:
