@@ -1,9 +1,13 @@
-import asyncio
-import websockets
-import json
+import os, uvloop, websockets, json, signal
+from kafka import KafkaProducer
 
-async def listen_binance_trades():
-    url = "wss://stream.binance.com:9443/ws/btcusdt@trade"
+WS_URL = os.getenv("WS_URL", "wss://stream.binance.com:9443/ws/btcusdt@trade")
+KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "kafka:9092")
+KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "ws_raw")
+
+async def binance_trades():
+    url = WS_URL
+
     async with websockets.connect(url) as websocket:
         while True:
             try:
@@ -18,4 +22,6 @@ async def listen_binance_trades():
                 print("ERROR:", e)
                 break
 
-asyncio.run(listen_binance_trades())
+
+if __name__ == "__main__":
+    uvloop.run(main())

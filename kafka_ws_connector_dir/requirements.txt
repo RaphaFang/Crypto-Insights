@@ -1,0 +1,8 @@
+asyncio
+websockets
+aiokafka
+
+# not sure things below
+authlib
+starlette
+itsdangerous

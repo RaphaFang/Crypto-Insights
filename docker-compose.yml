@@ -47,6 +47,19 @@ services:
     volumes:
       - ./flink_dir/tm_checkpoints:/opt/flink/checkpoints
     networks: [k_f_net]
+  
+  ws_to_kafka_connector:
+    build:
+      context: .
+      dockerfile: kafka_ws_connector_dir/Dockerfile
+    environment:
+      WS_URL: "wss://stream.binance.com:9443/ws/btcusdt@trade"
+      KAFKA_BOOTSTRAP: "kafka:9092"
+      KAFKA_TOPIC: "ws_raw"
+    depends_on:
+      - kafka
+    restart: unless-stopped
+    networks: [k_f_net]
 
 networks:
   k_f_net:
