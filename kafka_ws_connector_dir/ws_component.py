@@ -1,4 +1,6 @@
-import os, json, uvloop, websockets
+import websockets, logging
+
+log = logging.getLogger("ws")
 
 async def binance_trades(ws_url: str):
     async with websockets.connect(
@@ -10,9 +12,9 @@ async def binance_trades(ws_url: str):
         while True:
             try:
                 data = await websocket.recv()
-                print(data.encode("utf-8"))
+                log.info(data.encode("utf-8"))
             except Exception as e:
-                print("ERROR:", e)
+                log.error("ERROR:", e)
                 break
 
 
