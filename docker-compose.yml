@@ -15,38 +15,41 @@ services:
       KAFKA_CFG_KRAFT_STORAGE_ROOT_DIR: /bitnami/kafka/data
       ALLOW_PLAINTEXT_LISTENER: "yes"
       KAFKA_CFG_LOG_RETENTION_MINUTES: "5"
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # 這行之後要修正，因為只會有一主題，一分區，接下來要調整成寫定。但是需要在多一個docker service去完成
+
     volumes:
       - ./kafka_dir/data:/bitnami/kafka/data
     networks: [k_f_net]
 
-  JM:
-    image: apache/flink:1.20.2
-    command: jobmanager
-    ports:
-      - "8081:8081"
-    environment:
-      - |
-        FLINK_PROPERTIES=
-          jobmanager.rpc.address: JM
-          state.checkpoints.dir: file:///opt/flink/checkpoints
+  # JM:
+  #   image: apache/flink:1.20.2
+  #   command: jobmanager
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     - |
+  #       FLINK_PROPERTIES=
+  #         jobmanager.rpc.address: JM
+  #         state.checkpoints.dir: file:///opt/flink/checkpoints
 
-    volumes:
-      - ./flink_dir/jm_checkpoints:/opt/flink/checkpoints
-    networks: [k_f_net]
+  #   volumes:
+  #     - ./flink_dir/jm_checkpoints:/opt/flink/checkpoints
+  #   networks: [k_f_net]
 
-  TM:
-    image: apache/flink:1.20.2
-    command: taskmanager
-    environment:
-      - |
-        FLINK_PROPERTIES=
-          jobmanager.rpc.address: JM
-          taskmanager.numberOfTaskSlots: 4
-          state.checkpoints.dir: file:///opt/flink/checkpoints
+  # TM:
+  #   image: apache/flink:1.20.2
+  #   command: taskmanager
+  #   environment:
+  #     - |
+  #       FLINK_PROPERTIES=
+  #         jobmanager.rpc.address: JM
+  #         taskmanager.numberOfTaskSlots: 4
+  #         state.checkpoints.dir: file:///opt/flink/checkpoints
 
-    volumes:
-      - ./flink_dir/tm_checkpoints:/opt/flink/checkpoints
-    networks: [k_f_net]
+  #   volumes:
+  #     - ./flink_dir/tm_checkpoints:/opt/flink/checkpoints
+  #   networks: [k_f_net]
   
   ws_to_kafka_connector:
     build:
@@ -55,7 +58,7 @@ services:
     environment:
       WS_URL: "wss://stream.binance.com:9443/ws/btcusdt@trade"
       KAFKA_BOOTSTRAP: "kafka:9092"
-      KAFKA_TOPIC: "ws_raw"
+      KAFKA_TOPIC: "btc_raw"
     depends_on:
       - kafka
     restart: unless-stopped

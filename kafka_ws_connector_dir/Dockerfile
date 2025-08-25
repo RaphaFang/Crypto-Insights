@@ -5,12 +5,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir \
-    confluent-kafka==2.6.0 \
-    websockets==12.0 \
-    uvloop==0.20.0
+    confluent-kafka==2.11.1 \
+    websockets==15.0.1 \
+    uvloop==0.21.0 \
+    logging==0.4.9.6
 
 WORKDIR /app
-COPY app/ /app/
+COPY . /app/
 
-ENV PYTHONUNBUFFERED=1
-CMD ["python", "-m", "ws_connector"]
+# ENV PYTHONUNBUFFERED=1
+CMD ["python", "-m", "main.py"]
