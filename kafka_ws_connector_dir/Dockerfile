@@ -14,4 +14,4 @@ WORKDIR /app
 COPY . /app/
 
 # ENV PYTHONUNBUFFERED=1
-CMD ["python", "-m", "main.py"]
+CMD ["python", "-m", "kafka_ws_connector_dir"]
