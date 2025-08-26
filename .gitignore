@@ -30,8 +30,6 @@ __pycache__/
 kafka_dir/data/*
 !kafka_dir/data/.gitkeep
 
-flink_dir/jm_checkpoints/*
-!flink_dir/jm_checkpoints/.gitkeep
+flink_dir/checkpoints/*
+!flink_dir/checkpoints/.gitkeep
 
-flink_dir/tm_checkpoints/*
-!flink_dir/tm_checkpoints/.gitkeep

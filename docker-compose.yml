@@ -1,6 +1,6 @@
 services:
   kafka:
-    image: bitnami/kafka:latest
+    image: bitnami/kafka:4.0.0
     ports:
       - "9092:9092"
     environment:
@@ -22,34 +22,35 @@ services:
       - ./kafka_dir/data:/bitnami/kafka/data
     networks: [k_f_net]
 
-  # JM:
-  #   image: apache/flink:1.20.2
-  #   command: jobmanager
-  #   ports:
-  #     - "8081:8081"
-  #   environment:
-  #     - |
-  #       FLINK_PROPERTIES=
-  #         jobmanager.rpc.address: JM
-  #         state.checkpoints.dir: file:///opt/flink/checkpoints
+  jm:
+    image: flink:scala_2.12-java21
+    command: jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      - |
+        FLINK_PROPERTIES=
+          jobmanager.rpc.address: jm
+          state.checkpoints.dir: file:///opt/flink/checkpoints
+    # 這邊的 jm container name 建議小寫，因為大寫會轉回小寫，但是我要DNS連接，這時候我想連大寫的找不到
 
-  #   volumes:
-  #     - ./flink_dir/jm_checkpoints:/opt/flink/checkpoints
-  #   networks: [k_f_net]
+    volumes:
+      - ./flink_dir/checkpoints:/opt/flink/checkpoints
+    networks: [k_f_net]
 
-  # TM:
-  #   image: apache/flink:1.20.2
-  #   command: taskmanager
-  #   environment:
-  #     - |
-  #       FLINK_PROPERTIES=
-  #         jobmanager.rpc.address: JM
-  #         taskmanager.numberOfTaskSlots: 4
-  #         state.checkpoints.dir: file:///opt/flink/checkpoints
+  tm:
+    image: flink:scala_2.12-java21
+    command: taskmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+          jobmanager.rpc.address: JM
+          taskmanager.numberOfTaskSlots: 4
+          state.checkpoints.dir: file:///opt/flink/checkpoints
 
-  #   volumes:
-  #     - ./flink_dir/tm_checkpoints:/opt/flink/checkpoints
-  #   networks: [k_f_net]
+    volumes:
+      - ./flink_dir/checkpoints:/opt/flink/checkpoints
+    networks: [k_f_net]
   
   ws_to_kafka_connector:
     build:
@@ -59,6 +60,7 @@ services:
       WS_URL: "wss://stream.binance.com:9443/ws/btcusdt@trade"
       KAFKA_BOOTSTRAP: "kafka:9092"
       KAFKA_TOPIC: "btc_raw"
+      LOG_LEVEL: "INFO"
       TZ: "Europe/Copenhagen" 
     depends_on:
       - kafka
@@ -66,4 +68,4 @@ services:
     networks: [k_f_net]
 
 networks:
-  k_f_net:
+  k_f_net: {}
