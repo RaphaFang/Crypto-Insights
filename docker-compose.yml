@@ -59,6 +59,7 @@ services:
       WS_URL: "wss://stream.binance.com:9443/ws/btcusdt@trade"
       KAFKA_BOOTSTRAP: "kafka:9092"
       KAFKA_TOPIC: "btc_raw"
+      TZ: "Europe/Copenhagen" 
     depends_on:
       - kafka
     restart: unless-stopped

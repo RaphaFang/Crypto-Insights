@@ -11,8 +11,8 @@ async def binance_trades(ws_url: str):
         while True:
             try:
                 data = await ws.recv()
+                # log.debug(data)
                 yield data
-                # log.debug(data.encode("utf-8"))
 
             except Exception as e:
                 log.error("ERROR:", e)

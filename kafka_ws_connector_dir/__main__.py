@@ -7,7 +7,7 @@ from .logger import setup_logger
 WS_URL = os.getenv("WS_URL", "wss://stream.binance.com:9443/ws/btcusdt@trade")
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "kafka:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "btc_raw")
-LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG").upper()
 
 
 async def main():
@@ -18,7 +18,7 @@ async def main():
     finally:
         close(p)
 
-setup_logger(LEVEL)
+setup_logger(LOG_LEVEL)
 uvloop.run(main())
 
 # if __name__ == "__main__":
