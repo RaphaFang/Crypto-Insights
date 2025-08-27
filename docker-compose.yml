@@ -24,7 +24,7 @@ services:
 
   jm:
     image: flink:scala_2.12-java21
-    command: jobmanager
+    command: standalone-job
     ports:
       - "8081:8081"
     environment:
@@ -33,9 +33,9 @@ services:
           jobmanager.rpc.address: jm
           state.checkpoints.dir: file:///opt/flink/checkpoints
     # 這邊的 jm container name 建議小寫，因為大寫會轉回小寫，但是我要DNS連接，這時候我想連大寫的找不到
-
     volumes:
       - ./flink_dir/checkpoints:/opt/flink/checkpoints
+      - ./flink_dir/usrlib:/opt/flink/usrlib          
     networks: [k_f_net]
 
   tm:
@@ -44,12 +44,12 @@ services:
     environment:
       - |
         FLINK_PROPERTIES=
-          jobmanager.rpc.address: JM
+          jobmanager.rpc.address: jm
           taskmanager.numberOfTaskSlots: 4
           state.checkpoints.dir: file:///opt/flink/checkpoints
-
     volumes:
       - ./flink_dir/checkpoints:/opt/flink/checkpoints
+      - ./flink_dir/usrlib:/opt/flink/usrlib          
     networks: [k_f_net]
   
   ws_to_kafka_connector:
