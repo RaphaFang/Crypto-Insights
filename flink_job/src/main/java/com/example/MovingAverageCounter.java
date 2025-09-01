@@ -6,7 +6,12 @@ import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsIni
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-public class KafkaReadOnly {
+// 
+// mvn -U -DskipTests clean package
+// cp target/flink-job-1.0.0.jar ../flink_dir/usrlib
+// 
+
+public class MovingAverageCounter {
 
     public static void main(String[] args) throws Exception {
         String bootstrap = "kafka:9092";
