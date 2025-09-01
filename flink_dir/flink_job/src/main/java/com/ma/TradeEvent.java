@@ -4,28 +4,32 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 public class TradeEvent implements Serializable {
-    public String eventType; // e
-    public long eventTime; // E (ms)
-    public String symbol; // s
-    public long tradeId; // t
-    public BigDecimal price; // p
-    public BigDecimal quantity; // q
-    public long tradeTime; // T (ms)
-    public boolean isBuyerMarketMaker; // m
-    public boolean ignore; // M
+  public String eventType; // e
+  public long eventTime; // E (ms)
+  public String symbol; // s
+  public long tradeId; // t
+  public BigDecimal price; // p
+  public BigDecimal quantity; // q
+  public long tradeTime; // T (ms)
+  public boolean isBuyerMarketMaker; // m
+  public boolean ignore; // M
 
-    @Override
-    public String toString() {
-        return "TradeEvent{" +
-                "eventType='" + eventType + '\'' +
-                ", eventTime=" + eventTime +
-                ", symbol='" + symbol + '\'' +
-                ", tradeId=" + tradeId +
-                ", price=" + price +
-                ", quantity=" + quantity +
-                ", tradeTime=" + tradeTime +
-                ", isBuyerMarketMaker=" + isBuyerMarketMaker +
-                ", ignore=" + ignore +
-                '}';
-    }
+  // 下面是我自定義的欄位
+  public long wmIn;
+
+  @Override
+  public String toString() {
+    return "TradeEvent{" +
+        "eventType='" + eventType + '\'' +
+        ", eventTime=" + eventTime +
+        ", symbol='" + symbol + '\'' +
+        ", tradeId=" + tradeId +
+        ", price=" + price +
+        ", quantity=" + quantity +
+        ", tradeTime=" + tradeTime +
+        ", isBuyerMarketMaker=" + isBuyerMarketMaker +
+        ", ignore=" + ignore +
+        ", wmIn=" + wmIn +
+        '}';
+  }
 }
