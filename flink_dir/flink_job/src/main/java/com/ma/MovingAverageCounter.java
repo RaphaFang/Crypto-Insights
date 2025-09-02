@@ -1,5 +1,6 @@
 package com.ma;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
@@ -8,6 +9,9 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
+// import org.apache.flink.streaming.api.windowing.time.Time;
+
 // 
 // cd flink_dir/flink_job
 // mvn -U -DskipTests clean package
@@ -31,9 +35,6 @@ public class MovingAverageCounter {
         .setValueOnlyDeserializer(new TradeEventDeserializationSchema())
         .build();
 
-    // DataStream<TradeEvent> trades = env
-    // .fromSource(source, WatermarkStrategy.noWatermarks(), "kafka-trade-source");
-
     // ! 1. Watermark, with maximum 2 sec delay
     WatermarkStrategy<TradeEvent> wm = WatermarkStrategy
         .<TradeEvent>forBoundedOutOfOrderness(Duration.ofSeconds(2))
@@ -41,15 +42,33 @@ public class MovingAverageCounter {
             (SerializableTimestampAssigner<TradeEvent>) (e, ts) -> (e.tradeTime > 0 ? e.tradeTime : e.eventTime))
         .withIdleness(Duration.ofSeconds(30));
 
-    // 2) 用 ProcessFunction 壓入當下處理時間到 wmIn
     DataStream<TradeEvent> trades = env.fromSource(source, wm, "kafka-trade-source")
         .process(new StampWmIn()) // ← 取代原本的 .map(...)
         .name("stamp-wm_in");
+    // TradeEvent{eventType='trade', eventTime=1756849656824, symbol='BTCUSDT',
+    // tradeId=5210609518, price=111255.62000000, quantity=0.01204000,
+    // tradeTime=1756849656823, isBuyerMarketMaker=false, ignore=true,
+    // wmIn=1756849656939}
 
-    trades
+    // ! 2. 10s 視窗、1s 滑動 → VWAP
+    Duration SIZE = Duration.ofSeconds(10);
+    Duration SLIDE = Duration.ofSeconds(1);
+    final long MIN_TRADES = 0L; // 需要門檻就改數字
+    final BigDecimal MIN_VOLUME = BigDecimal.ZERO; // 需要門檻就改成 new BigDecimal("0.001")
+    final int SCALE = 8;
+
+    DataStream<VwapResult> vwap10s1s = trades
         .keyBy(t -> t.symbol)
-        .print();
+        .window(SlidingEventTimeWindows.of(SIZE, SLIDE))
+        .allowedLateness(Duration.ofSeconds(1))
+        .aggregate(new VwapAgg(), new VwapWindow(MIN_TRADES, MIN_VOLUME, SCALE))
+        .name("vwap_10s_slide_1s");
+    // VwapResult{symbol='BTCUSDT', windowStart=1756847091000,
+    // windowEnd=1756847101000, tradeCount=22, qtySum=0.10903000,
+    // vwap=111371.48183711, secFilled=9, expectedSeconds=10}
 
-    env.execute("normalize-trades");
+    vwap10s1s.print();
+
+    env.execute("normalize-trades + vwap_10s_1s");
   }
 }
