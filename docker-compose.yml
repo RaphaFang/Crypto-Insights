@@ -22,9 +22,24 @@ services:
       - ./kafka_dir/data:/bitnami/kafka/data
     networks: [k_f_net]
 
+  ws_to_kafka_connector:
+    build:
+      context: .
+      dockerfile: kafka_ws_connector_dir/Dockerfile
+    environment:
+      WS_URL: "wss://stream.binance.com:9443/ws/btcusdt@trade"
+      KAFKA_BOOTSTRAP: "kafka:9092"
+      KAFKA_TOPIC: "btc_raw"
+      LOG_LEVEL: "INFO"
+      TZ: "Europe/Copenhagen"
+    depends_on:
+      - kafka
+    restart: unless-stopped
+    networks: [k_f_net]
+
   jm:
-    image: flink:scala_2.12-java21
-    command: standalone-job
+    image: flink:1.20.2-scala_2.12-java17
+    command: standalone-job -c com.example.KafkaReadOnly /opt/flink/usrlib/flink-job-1.0.0.jar
     ports:
       - "8081:8081"
     environment:
@@ -39,7 +54,7 @@ services:
     networks: [k_f_net]
 
   tm:
-    image: flink:scala_2.12-java21
+    image: flink:1.20.2-scala_2.12-java17
     command: taskmanager
     environment:
       - |
@@ -52,20 +67,7 @@ services:
       - ./flink_dir/usrlib:/opt/flink/usrlib          
     networks: [k_f_net]
   
-  ws_to_kafka_connector:
-    build:
-      context: .
-      dockerfile: kafka_ws_connector_dir/Dockerfile
-    environment:
-      WS_URL: "wss://stream.binance.com:9443/ws/btcusdt@trade"
-      KAFKA_BOOTSTRAP: "kafka:9092"
-      KAFKA_TOPIC: "btc_raw"
-      LOG_LEVEL: "INFO"
-      TZ: "Europe/Copenhagen" 
-    depends_on:
-      - kafka
-    restart: unless-stopped
-    networks: [k_f_net]
+
 
 networks:
   k_f_net: {}

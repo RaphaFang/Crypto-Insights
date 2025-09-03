@@ -67,6 +67,27 @@ public class MovingAverageCounter {
     // windowEnd=1756847101000, tradeCount=22, qtySum=0.10903000,
     // vwap=111371.48183711, secFilled=9, expectedSeconds=10}
 
+    /*
+     * "symbol='" + symbol + '\'' +
+     * ", ma=" + ma +
+     * 
+     * ", windowStart=" + windowStart +
+     * ", windowEnd=" + windowEnd +
+     * ", tradeCount=" + tradeCount +
+     * 
+     * ", qtySum=" + qtySum +
+     * ", vwap=" + vwap +
+     * 
+     * ", secFilled=" // ! 用事件時間（tradeTime；沒有就 eventTime）把每筆交易按「秒」分桶
+     * ", eventTimeMin=" + eventTimeMin + // 最小的事件時間
+     * ", emitProcTime=" + emitProcTime + // 出去的時間
+     * ", latEventToEmitMs=" //! 發出時間，減上最後資料事件時間。基於 事件時間 的延遲計算
+     * ", latIngressFirstToEmitMs=" // 發出時間，減上wm。
+     * ", latIngressLastToEmitMs=" //! 發出時間，減上wm。基於 wm 時間的延遲計算
+     * 發出時間，減上最後事件時間。基於收到資料的延遲計算這兩者的差異不用過分解讀成在kafka卡10s，有很多因素
+     * '}';
+     */
+
     vwap10s1s.print();
 
     env.execute("normalize-trades + vwap_10s_1s");

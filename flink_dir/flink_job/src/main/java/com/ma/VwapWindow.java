@@ -37,18 +37,15 @@ class VwapWindow extends ProcessWindowFunction<VwapAcc, VwapResult, String, Time
     long end = ctx.window().getEnd();
 
     int secFilled = acc.secBuckets.size();
-    int expectedSeconds = (int) ((end - start) / 1000L);
-
-    // emit 當下的 processing time（結果輸出時間）
-    long nowProc = ctx.currentProcessingTime();
+    long nowProc = ctx.currentProcessingTime(); // emit 當下的 processing time（結果輸出時間）
 
     VwapResult r = new VwapResult(
         symbol, start, end,
         acc.count, acc.sumQ, vwap,
-        secFilled, expectedSeconds);
+        secFilled);
 
-    // 補充觀測欄位
     r.eventTimeMin = acc.minTs;
+    r.eventTimeMax = acc.maxTs;
 
     r.emitProcTime = nowProc;
     r.latEventToEmitMs = nowProc - acc.maxTs;
