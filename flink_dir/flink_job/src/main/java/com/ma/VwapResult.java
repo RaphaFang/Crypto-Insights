@@ -5,13 +5,23 @@ import java.math.BigDecimal;
 
 public class VwapResult implements Serializable {
   public String symbol;
-  public long windowStart;
-  public long windowEnd;
-  public long tradeCount; // 視窗內成交筆數
-  public BigDecimal qtySum; // Σ(q)
-  public BigDecimal vwap; // Σ(p*q)/Σ(q)
-  public int secFilled; // 這個 10 秒裡有交易的「秒」數
-  public int expectedSeconds; // 理論秒數（size/1s），10 秒窗就是 10
+
+  public long windowStart; // 視窗左界（事件時間，ms）
+  public long windowEnd; // 視窗右界（事件時間，ms）
+  public long tradeCount; // 視窗內訊息筆數（每筆都計）
+
+  public BigDecimal qtySum; // Σ(quantity)
+  public BigDecimal vwap; // Σ(price*quantity)/Σ(quantity)
+
+  public int secFilled; // 這個 10 秒窗內實際有成交的「秒」數
+  public int expectedSeconds; // (windowEnd - windowStart)/1000，通常 10
+
+  public long eventTimeMin; // 視窗內最小事件時間（ms）
+
+  public long emitProcTime; // 視窗輸出當下的 processing time
+  public long latEventToEmitMs; // emitProcTime - maxTs
+  public long latIngressFirstToEmitMs; // emitProcTime - minWmIn
+  public long latIngressLastToEmitMs; // emitProcTime - maxWmIn
 
   public VwapResult() {
   }
@@ -40,6 +50,11 @@ public class VwapResult implements Serializable {
         ", vwap=" + vwap +
         ", secFilled=" + secFilled +
         ", expectedSeconds=" + expectedSeconds +
+        ", eventTimeMin=" + eventTimeMin +
+        ", emitProcTime=" + emitProcTime +
+        ", latEventToEmitMs=" + latEventToEmitMs +
+        ", latIngressFirstToEmitMs=" + latIngressFirstToEmitMs +
+        ", latIngressLastToEmitMs=" + latIngressLastToEmitMs +
         '}';
   }
 }

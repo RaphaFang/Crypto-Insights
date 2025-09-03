@@ -53,8 +53,8 @@ public class MovingAverageCounter {
     // ! 2. 10s 視窗、1s 滑動 → VWAP
     Duration SIZE = Duration.ofSeconds(10);
     Duration SLIDE = Duration.ofSeconds(1);
-    final long MIN_TRADES = 0L; // 需要門檻就改數字
-    final BigDecimal MIN_VOLUME = BigDecimal.ZERO; // 需要門檻就改成 new BigDecimal("0.001")
+    final long MIN_TRADES = 0L;
+    final BigDecimal MIN_VOLUME = BigDecimal.ZERO;
     final int SCALE = 8;
 
     DataStream<VwapResult> vwap10s1s = trades
