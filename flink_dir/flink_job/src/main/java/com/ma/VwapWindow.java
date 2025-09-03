@@ -47,10 +47,10 @@ class VwapWindow extends ProcessWindowFunction<VwapAcc, VwapResult, String, Time
     r.eventTimeMin = acc.minTs;
     r.eventTimeMax = acc.maxTs;
 
-    r.emitProcTime = nowProc;
-    r.latEventToEmitMs = nowProc - acc.maxTs;
-    r.latIngressFirstToEmitMs = (acc.minWmIn == Long.MAX_VALUE) ? -1L : (nowProc - acc.minWmIn);
-    r.latIngressLastToEmitMs = (acc.maxWmIn == Long.MIN_VALUE) ? -1L : (nowProc - acc.maxWmIn);
+    r.emitTime = nowProc;
+    r.eventToEmitLatencyMs = nowProc - acc.maxTs;
+    r.firstIngestToEmitLatencyMs = (acc.minWmIn == Long.MAX_VALUE) ? -1L : (nowProc - acc.minWmIn);
+    r.lastIngestToEmitLatencyMs = (acc.maxWmIn == Long.MIN_VALUE) ? -1L : (nowProc - acc.maxWmIn);
 
     out.collect(r);
   }

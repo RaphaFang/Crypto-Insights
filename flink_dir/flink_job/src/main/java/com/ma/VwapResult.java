@@ -9,7 +9,7 @@ public class VwapResult implements Serializable {
 
   public long windowStart; // 視窗左界（事件時間，ms）
   public long windowEnd; // 視窗右界（事件時間，ms）
-  public long tradeCount; // 視窗內訊息筆數（每筆都計）
+  public long rawDataCount; // 視窗內訊息筆數（每筆都計）
 
   public BigDecimal qtySum; // Σ(quantity)
   public BigDecimal vwap; // Σ(price*quantity)/Σ(quantity)
@@ -19,21 +19,21 @@ public class VwapResult implements Serializable {
   public long eventTimeMin; // 視窗內最小事件時間（ms）
   public long eventTimeMax; // 視窗內最大事件時間（ms）
 
-  public long emitProcTime; // 視窗輸出當下的 processing time
-  public long latEventToEmitMs; // emitProcTime - maxTs
-  public long latIngressFirstToEmitMs; // emitProcTime - minWmIn
-  public long latIngressLastToEmitMs; // emitProcTime - maxWmIn
+  public long emitTime; // 視窗輸出當下的 processing time
+  public long eventToEmitLatencyMs; // emitTime - maxTs
+  public long firstIngestToEmitLatencyMs; // emitTime - minWmIn
+  public long lastIngestToEmitLatencyMs; // emitTime - maxWmIn
 
   public VwapResult() {
   }
 
   public VwapResult(String symbol, long windowStart, long windowEnd,
-      long tradeCount, BigDecimal qtySum, BigDecimal vwap,
+      long rawDataCount, BigDecimal qtySum, BigDecimal vwap,
       int secFilled) {
     this.symbol = symbol;
     this.windowStart = windowStart;
     this.windowEnd = windowEnd;
-    this.tradeCount = tradeCount;
+    this.rawDataCount = rawDataCount;
     this.qtySum = qtySum;
     this.vwap = vwap;
     this.secFilled = secFilled;
@@ -47,7 +47,7 @@ public class VwapResult implements Serializable {
 
         ", windowStart=" + windowStart +
         ", windowEnd=" + windowEnd +
-        ", tradeCount=" + tradeCount +
+        ", rawDataCount=" + rawDataCount +
 
         ", qtySum=" + qtySum +
         ", vwap=" + vwap +
@@ -56,10 +56,10 @@ public class VwapResult implements Serializable {
         ", eventTimeMin=" + eventTimeMin +
         ", eventTimeMax=" + eventTimeMax +
 
-        ", emitProcTime=" + emitProcTime +
-        ", latEventToEmitMs=" + latEventToEmitMs +
-        ", latIngressFirstToEmitMs=" + latIngressFirstToEmitMs +
-        ", latIngressLastToEmitMs=" + latIngressLastToEmitMs +
+        ", emitTime=" + emitTime +
+        ", eventToEmitLatencyMs=" + eventToEmitLatencyMs +
+        ", firstIngestToEmitLatencyMs=" + firstIngestToEmitLatencyMs +
+        ", lastIngestToEmitLatencyMs=" + lastIngestToEmitLatencyMs +
         '}';
   }
 }

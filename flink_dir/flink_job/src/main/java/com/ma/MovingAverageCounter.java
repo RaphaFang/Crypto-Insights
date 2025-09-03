@@ -7,10 +7,10 @@ import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
+import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
-// import org.apache.flink.streaming.api.windowing.time.Time;
 
 // 
 // cd flink_dir/flink_job
@@ -25,6 +25,7 @@ public class MovingAverageCounter {
     String topic = "btc_raw";
 
     StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+    env.enableCheckpointing(10_000, CheckpointingMode.AT_LEAST_ONCE);
 
     // ! 0. deserialization by my own schema
     KafkaSource<TradeEvent> source = KafkaSource.<TradeEvent>builder()
@@ -43,12 +44,8 @@ public class MovingAverageCounter {
         .withIdleness(Duration.ofSeconds(30));
 
     DataStream<TradeEvent> trades = env.fromSource(source, wm, "kafka-trade-source")
-        .process(new StampWmIn()) // ← 取代原本的 .map(...)
+        .process(new StampWmIn())
         .name("stamp-wm_in");
-    // TradeEvent{eventType='trade', eventTime=1756849656824, symbol='BTCUSDT',
-    // tradeId=5210609518, price=111255.62000000, quantity=0.01204000,
-    // tradeTime=1756849656823, isBuyerMarketMaker=false, ignore=true,
-    // wmIn=1756849656939}
 
     // ! 2. 10s 視窗、1s 滑動 → VWAP
     Duration SIZE = Duration.ofSeconds(10);
@@ -63,9 +60,14 @@ public class MovingAverageCounter {
         .allowedLateness(Duration.ofSeconds(1))
         .aggregate(new VwapAgg(), new VwapWindow(MIN_TRADES, MIN_VOLUME, SCALE))
         .name("vwap_10s_slide_1s");
-    // VwapResult{symbol='BTCUSDT', windowStart=1756847091000,
-    // windowEnd=1756847101000, tradeCount=22, qtySum=0.10903000,
-    // vwap=111371.48183711, secFilled=9, expectedSeconds=10}
+
+    // ! 3. Back to kafka, at topic agg.vwap
+    String outTopic = "agg.vwap"; // 這邊是 topic name
+    vwap10s1s.sinkTo(ResultSinks.buildHistSink(bootstrap, outTopic))
+        .name("sink-agg.vwap");
+
+    // vwap10s1s.print();
+    env.execute("normalize-trades + vwap_10s_1s → kafka");
 
     /*
      * "symbol='" + symbol + '\'' +
@@ -73,23 +75,24 @@ public class MovingAverageCounter {
      * 
      * ", windowStart=" + windowStart +
      * ", windowEnd=" + windowEnd +
-     * ", tradeCount=" + tradeCount +
+     * ", rawDataCount=" + rawDataCount +
      * 
      * ", qtySum=" + qtySum +
      * ", vwap=" + vwap +
      * 
      * ", secFilled=" // ! 用事件時間（tradeTime；沒有就 eventTime）把每筆交易按「秒」分桶
      * ", eventTimeMin=" + eventTimeMin + // 最小的事件時間
-     * ", emitProcTime=" + emitProcTime + // 出去的時間
-     * ", latEventToEmitMs=" //! 發出時間，減上最後資料事件時間。基於 事件時間 的延遲計算
-     * ", latIngressFirstToEmitMs=" // 發出時間，減上wm。
-     * ", latIngressLastToEmitMs=" //! 發出時間，減上wm。基於 wm 時間的延遲計算
+     * ", eventTimeMax=" + eventTimeMax +
+     * 
+     * ", emitTime=" + emitTime + // 出去的時間
+     * ", eventToEmitLatencyMs=" //! 發出時間，減上最後資料事件時間。基於 事件時間 的延遲計算
+     * ", firstIngestToEmitLatencyMs=" // 發出時間，減上wm。
+     * ", lastIngestToEmitLatencyMs=" //! 發出時間，減上wm。基於 wm 時間的延遲計算
      * 發出時間，減上最後事件時間。基於收到資料的延遲計算這兩者的差異不用過分解讀成在kafka卡10s，有很多因素
      * '}';
      */
 
     vwap10s1s.print();
-
     env.execute("normalize-trades + vwap_10s_1s");
   }
 }
