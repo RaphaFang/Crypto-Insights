@@ -31,7 +31,7 @@ services:
       WS_URL: "wss://stream.binance.com:9443/ws/btcusdt@trade"
       KAFKA_BOOTSTRAP: "kafka:9092"
       KAFKA_TOPIC: "btc_raw"
-      LOG_LEVEL: "debug"
+      LOG_LEVEL: "info"
       TZ: "Europe/Copenhagen"
     # depends_on:
     #   - kafka
@@ -74,7 +74,7 @@ services:
       TZ: "Europe/Copenhagen"
       CLICKHOUSE_USER: admin
       CLICKHOUSE_PASSWORD: "S3curePass!change"
-      CLICKHOUSE_DB: market
+      CLICKHOUSE_DB: agg
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
     ports:
       - "8123:8123"
@@ -83,16 +83,29 @@ services:
     volumes:
       - ./clickhouse_dir/ch_data:/var/lib/clickhouse
       - ./clickhouse_dir/ch_logs:/var/log/clickhouse-server
-      - ./clickhouse_dir/connector/init.sql:/docker-entrypoint-initdb.d/init.sql
-
+      - ./clickhouse_dir/connector:/sql
     # ulimits, cap_add are setup for better performance
     ulimits:
-      nofile:
-        soft: 262144
-        hard: 262144
+      nofile: { soft: 262144, hard: 262144 }
+
     cap_add:
       - IPC_LOCK
       - SYS_NICE  
+    networks: [k_f_net]
+
+  init-clickhouse:
+    image: clickhouse/clickhouse-server:25.8.2.29
+    depends_on:
+      - clickhouse
+    entrypoint: ["/bin/sh","-lc"]
+    command: >
+      'until clickhouse-client -h clickhouse -u admin --password "S3curePass!change" --query="SELECT 1" >/dev/null 2>&1;
+        do sleep 1; done;
+      clickhouse-client -h clickhouse -u admin --password "S3curePass!change" --multiquery < /sql/init.sql;
+      echo "init done"'
+    volumes:
+      - ./clickhouse_dir/connector:/sql
+    restart: "no"
     networks: [k_f_net]
 
   grafana:

@@ -18,6 +18,7 @@ import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindow
 // cp target/flink-job-1.0.0.jar ../usrlib
 // 
 // 總覺得要設計檢查，晚到被丟掉的資料，secFilled 常常不是滿的
+// 還要記得跳轉回原先的 cd ，因為後面 git
 public class MovingAverageCounter {
 
   public static void main(String[] args) throws Exception {
@@ -91,8 +92,5 @@ public class MovingAverageCounter {
      * 發出時間，減上最後事件時間。基於收到資料的延遲計算這兩者的差異不用過分解讀成在kafka卡10s，有很多因素
      * '}';
      */
-
-    // vwap10s1s.print();
-    env.execute("normalize-trades + vwap_10s_1s");
   }
 }
