@@ -17,7 +17,7 @@ import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindow
 // mvn -U -DskipTests clean package
 // cp target/flink-job-1.0.0.jar ../usrlib
 // 
-
+// 總覺得要設計檢查，晚到被丟掉的資料，secFilled 常常不是滿的
 public class MovingAverageCounter {
 
   public static void main(String[] args) throws Exception {
@@ -92,7 +92,7 @@ public class MovingAverageCounter {
      * '}';
      */
 
-    vwap10s1s.print();
+    // vwap10s1s.print();
     env.execute("normalize-trades + vwap_10s_1s");
   }
 }
