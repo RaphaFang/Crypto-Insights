@@ -38,3 +38,6 @@ clickhouse_dir/ch_data/*
 
 clickhouse_dir/ch_logs/*
 !clickhouse_dir/ch_logs/.gitkeep
+
+grafana_dir/grafana-data/*
+!grafana_dir/grafana-data/.gitkeep
