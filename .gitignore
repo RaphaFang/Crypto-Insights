@@ -33,3 +33,8 @@ kafka_dir/data/*
 flink_dir/checkpoints/*
 !flink_dir/checkpoints/.gitkeep
 
+clickhouse_dir/ch_data/*
+!clickhouse_dir/ch_data/.gitkeep
+
+clickhouse_dir/ch_logs/*
+!clickhouse_dir/ch_logs/.gitkeep
