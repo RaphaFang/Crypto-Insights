@@ -17,6 +17,7 @@ import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindow
 // mvn -U -DskipTests clean package
 // cp target/flink-job-1.0.0.jar ../usrlib
 // 
+// cd /Users/fangsiyu/Desktop/Crypto_K_F
 // 總覺得要設計檢查，晚到被丟掉的資料，secFilled 常常不是滿的
 // 還要記得跳轉回原先的 cd ，因為後面 git
 public class MovingAverageCounter {
