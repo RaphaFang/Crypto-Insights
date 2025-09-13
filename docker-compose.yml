@@ -7,7 +7,7 @@ services:
     environment:
       KAFKA_CFG_NODE_ID: "0"
       KAFKA_CFG_PROCESS_ROLES: "broker,controller"
-      KAFKA_OPTS: "-Duser.timezone=Asia/Taipei"
+      KAFKA_OPTS: "-Duser.timezone=Europe/Copenhagen"
       KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "0@localhost:9093"
       KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
       KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093
@@ -18,7 +18,6 @@ services:
       KAFKA_CFG_LOG_RETENTION_MINUTES: "5"
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
       # 這行之後要修正，因為只會有一主題，一分區，接下來要調整成寫定。但是需要在多一個docker service去完成
-
     volumes:
       - ./kafka_dir/data:/bitnami/kafka/data
     networks: [k_f_net]
@@ -72,37 +71,42 @@ services:
     image: clickhouse/clickhouse-server:25.8.2.29
     environment:
       TZ: "Europe/Copenhagen"
-      CLICKHOUSE_USER: admin
-      CLICKHOUSE_PASSWORD: "S3curePass!change"
+      CLICKHOUSE_USER: test
+      CLICKHOUSE_PASSWORD: "test"
       CLICKHOUSE_DB: agg
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
     ports:
       - "8123:8123"
       - "9000:9000" 
-
     volumes:
       - ./clickhouse_dir/ch_data:/var/lib/clickhouse
       - ./clickhouse_dir/ch_logs:/var/log/clickhouse-server
-      - ./clickhouse_dir/connector:/sql
     # ulimits, cap_add are setup for better performance
     ulimits:
       nofile: { soft: 262144, hard: 262144 }
-
     cap_add:
       - IPC_LOCK
       - SYS_NICE  
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "-h", "localhost", "--query", "SELECT 1"]
+      interval: 1s
+      timeout: 1s
+      retries: 5
+      start_period: 3s
     networks: [k_f_net]
 
   init-clickhouse:
+  # 這在調整好後，就可以砍掉了，沒必要每次都重新來。
     image: clickhouse/clickhouse-server:25.8.2.29
     depends_on:
-      - clickhouse
+      clickhouse:
+        condition: service_healthy
     entrypoint: ["/bin/sh","-lc"]
     command: >
-      'until clickhouse-client -h clickhouse -u admin --password "S3curePass!change" --query="SELECT 1" >/dev/null 2>&1;
-        do sleep 1; done;
-      clickhouse-client -h clickhouse -u admin --password "S3curePass!change" --multiquery < /sql/init.sql;
-      echo "init done"'
+      'clickhouse-client -h clickhouse -u test --password "test" --multiquery < /sql/init.sql &&
+      echo "msg from: container init-clickhouse, init done"'
+    # 一定要加上''，不然這邊shell會讀成段落段落，不是一條完整指令
+
     volumes:
       - ./clickhouse_dir/connector:/sql
     restart: "no"
