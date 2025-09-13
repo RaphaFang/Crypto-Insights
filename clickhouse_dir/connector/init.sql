@@ -1,5 +1,10 @@
 CREATE DATABASE IF NOT EXISTS agg;
 
+-- 如果格式錯誤，再來啟動
+DROP TABLE IF EXISTS agg.vwap;
+DROP TABLE IF EXISTS agg.vwap_queue;
+DROP TABLE IF EXISTS agg.vwap_mv;
+
 CREATE TABLE IF NOT EXISTS agg.vwap (
   symbol LowCardinality(String),
   window_start  DateTime64(3),
@@ -18,7 +23,6 @@ CREATE TABLE IF NOT EXISTS agg.vwap (
 PARTITION BY toDate(window_end)
 ORDER BY (symbol, window_end);
 
-DROP TABLE IF EXISTS agg.vwap_queue;
 CREATE TABLE agg.vwap_queue
 (
   symbol String,
@@ -45,7 +49,6 @@ SETTINGS
   input_format_skip_unknown_fields = 1,
   kafka_skip_broken_messages = 100;
 
-DROP TABLE IF EXISTS agg.vwap_mv;
 CREATE MATERIALIZED VIEW agg.vwap_mv
 TO agg.vwap AS
 SELECT
