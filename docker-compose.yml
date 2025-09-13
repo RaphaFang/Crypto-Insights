@@ -20,6 +20,12 @@ services:
       # 這行之後要修正，因為只會有一主題，一分區，接下來要調整成寫定。但是需要在多一個docker service去完成
     volumes:
       - ./kafka_dir/data:/bitnami/kafka/data
+    healthcheck:
+      test: ["CMD", "/opt/bitnami/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+      start_period: 15s
+      interval: 3s
+      timeout: 3s
+      retries: 5
     networks: [k_f_net]
 
   ws_to_kafka_connector:
@@ -32,8 +38,9 @@ services:
       KAFKA_TOPIC: "btc_raw"
       LOG_LEVEL: "info"
       TZ: "Europe/Copenhagen"
-    # depends_on:
-    #   - kafka
+    depends_on:
+      kafka:
+        condition: service_healthy
     restart: unless-stopped
     networks: [k_f_net]
 
@@ -95,22 +102,21 @@ services:
       start_period: 3s
     networks: [k_f_net]
 
-  init-clickhouse:
-  # 這在調整好後，就可以砍掉了，沒必要每次都重新來。
-    image: clickhouse/clickhouse-server:25.8.2.29
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    entrypoint: ["/bin/sh","-lc"]
-    command: >
-      'clickhouse-client -h clickhouse -u test --password "test" --multiquery < /sql/init.sql &&
-      echo "msg from: container init-clickhouse, init done"'
-    # 一定要加上''，不然這邊shell會讀成段落段落，不是一條完整指令
-
-    volumes:
-      - ./clickhouse_dir/connector:/sql
-    restart: "no"
-    networks: [k_f_net]
+  # init-clickhouse:
+  # # 這在調整好後，就可以砍掉了，沒必要每次都重新來。
+  #   image: clickhouse/clickhouse-server:25.8.2.29
+  #   depends_on:
+  #     clickhouse:
+  #       condition: service_healthy
+  #   entrypoint: ["/bin/sh","-lc"]
+  #   command: >
+  #     'clickhouse-client -h clickhouse -u test --password "test" --multiquery < /sql/init.sql &&
+  #     echo "msg from: container init-clickhouse, init done"'
+  #   # 一定要加上''，不然這邊shell會讀成段落段落，不是一條完整指令
+  #   volumes:
+  #     - ./clickhouse_dir/connector:/sql
+  #   restart: "no"
+  #   networks: [k_f_net]
 
   grafana:
     image: grafana/grafana:12.1.1
