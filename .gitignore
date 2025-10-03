@@ -25,7 +25,7 @@ build/
 __pycache__/
 *.py[cod]
 
-
+*.env
 # 忽略 kafka_dir/data 裡的所有內容，但保留資料夾本身
 kafka_dir/data/*
 !kafka_dir/data/.gitkeep
