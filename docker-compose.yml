@@ -1,5 +1,4 @@
 services:
-
   kafka:
     image: bitnami/kafka:4.0.0
     ports:
@@ -21,7 +20,13 @@ services:
     volumes:
       - ./kafka_dir/data:/bitnami/kafka/data
     healthcheck:
-      test: ["CMD", "/opt/bitnami/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+      test:
+        [
+          "CMD",
+          "/opt/bitnami/kafka/bin/kafka-broker-api-versions.sh",
+          "--bootstrap-server",
+          "localhost:9092",
+        ]
       start_period: 15s
       interval: 3s
       timeout: 3s
@@ -57,7 +62,7 @@ services:
     # 這邊的 jm container name 建議小寫，因為大寫會轉回小寫，但是我要DNS連接，這時候我想連大寫的找不到
     volumes:
       - ./flink_dir/checkpoints:/opt/flink/checkpoints
-      - ./flink_dir/usrlib:/opt/flink/usrlib          
+      - ./flink_dir/usrlib:/opt/flink/usrlib
     networks: [k_f_net]
 
   tm:
@@ -71,9 +76,9 @@ services:
           state.checkpoints.dir: file:///opt/flink/checkpoints
     volumes:
       - ./flink_dir/checkpoints:/opt/flink/checkpoints
-      - ./flink_dir/usrlib:/opt/flink/usrlib          
+      - ./flink_dir/usrlib:/opt/flink/usrlib
     networks: [k_f_net]
-  
+
   clickhouse:
     image: clickhouse/clickhouse-server:25.8.2.29
     environment:
@@ -84,7 +89,7 @@ services:
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
     ports:
       - "8123:8123"
-      - "9000:9000" 
+      - "9000:9000"
     volumes:
       - ./clickhouse_dir/ch_data:/var/lib/clickhouse
       - ./clickhouse_dir/ch_logs:/var/log/clickhouse-server
@@ -93,9 +98,10 @@ services:
       nofile: { soft: 262144, hard: 262144 }
     cap_add:
       - IPC_LOCK
-      - SYS_NICE  
+      - SYS_NICE
     healthcheck:
-      test: ["CMD", "clickhouse-client", "-h", "localhost", "--query", "SELECT 1"]
+      test:
+        ["CMD", "clickhouse-client", "-h", "localhost", "--query", "SELECT 1"]
       interval: 1s
       timeout: 1s
       retries: 5
@@ -110,7 +116,7 @@ services:
   #       condition: service_healthy
   #   entrypoint: ["/bin/sh","-lc"]
   #   command: >
-  #     'clickhouse-client -h clickhouse -u test --password "test" --multiquery < /sql/init.sql &&
+  #     'clickhouse-client -h ${CLICKHOUSE_HOST} -u ${CLICKHOUSE_USER} --password "${CLICKHOUSE_PASSWORD}" --multiquery < /sql/init.sql &&
   #     echo "msg from: container init-clickhouse, init done"'
   #   # 一定要加上''，不然這邊shell會讀成段落段落，不是一條完整指令
   #   volumes:
@@ -123,10 +129,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-    - GF_INSTALL_PLUGINS=vertamedia-clickhouse-datasource
+      - GF_INSTALL_PLUGINS=vertamedia-clickhouse-datasource
     volumes:
       - ./grafana_dir/grafana-data:/var/lib/grafana
     networks: [k_f_net]
 
 networks:
   k_f_net: {}
+# docker compose --env-file .env up
